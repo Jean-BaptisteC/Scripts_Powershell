@@ -12,7 +12,7 @@ $form.AutoSize = $True
 $form.AllowDrop = $True
 
 $Form_DragOver = [System.Windows.Forms.DragEventHandler]{
-	if ($_.Data.GetDataPresent([Windows.Forms.DataFormats]::FileDrop)) 
+	if ($_.Data.GetDataPresent([Windows.Forms.DataFormats]::FileDrop))
 	{
 	    $_.Effect = 'Copy'
 	}
@@ -21,9 +21,9 @@ $Form_DragOver = [System.Windows.Forms.DragEventHandler]{
 	    $_.Effect = 'None'
 	}
     }
-	
+
     $Form_DragDrop = [System.Windows.Forms.DragEventHandler]{
-	    foreach ($filename in $_.Data.GetData([Windows.Forms.DataFormats]::FileDrop)) 
+	    foreach ($filename in $_.Data.GetData([Windows.Forms.DataFormats]::FileDrop))
         {
 		    Start-Process $filename
 	    }
