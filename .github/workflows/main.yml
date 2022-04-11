@@ -1,0 +1,25 @@
+---
+name: Analyze scripts
+
+on:
+  push:
+    branches: [ master ]
+  pull_request:
+    branches: [ master ]
+
+jobs:
+  analyze:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code ⬇
+      - uses: actions/checkout@v3
+      - name: Run PSScriptAnalyzer 🔎
+        uses: microsoft/psscriptanalyzer-action@2044ae068e37d0161fa2127de04c19633882f061
+        with:
+          path: .\
+          recurse: true
+          output: results.sarif
+      - name: Upload file
+        uses: github/codeql-action/upload-sarif@v2
+        with:
+          sarif_file: results.sarif
