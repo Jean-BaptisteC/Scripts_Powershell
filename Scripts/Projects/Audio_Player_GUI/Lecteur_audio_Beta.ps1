@@ -14,29 +14,29 @@ Add-Type -AssemblyName System.Drawing
 
 #Initialize variables
 [Object]$MusicPath = @()
-$script:Playlist = New-Object System.Collections.ArrayList
+$script:Playlist = [System.Collections.ArrayList]@()
 [Int32]$script:Index = 0
 [bool]$script:Files = 0
-[bool]$script:Statut = 0
-[Object]$Transfer = @()
+$Transfer = [System.Collections.ArrayList]@()
 [Int32]$script:EndedPlaylist = 0
 
-function Add-File {#Import file
-        $FormFile = New-Object System.Windows.Forms.OpenFileDialog
-        $FormFile.CheckFileExists = $true
-        $FormFile.CheckPathExists = $true
-        $FormFile.Filter = "All Audio Files (*.*)|*.aac;*.flac;*.m4a;*.mp3;*.wav;*.wma|Free Lossless Audio Codec (*.flac)|*.flac|MPEG 4 Audio(*.m4a)|*.m4a|MPEG Audio (*.mp3)|*.mp3|Raw AAC (*.aac)|*.aac|Waveform Audio File Format (*.wav)|*.wav|Windows Media Audio (*.wma)|*.wma"
-        $FormFile.InitialDirectory = "C:\Users\$env:USERNAME\Music\"
-        $FormFile.Multiselect = $true
-        $FormFile.Title = 'Sélectionner un fichier audio à ouvrir'
-        if ($FormFile.ShowDialog() -eq [System.Windows.Forms.DialogResult]::OK)
-        {
-            $MusicPath = $FormFile.FileNames
-            Invoke-Playlist -Path $MusicPath
-        }
+function Add-File {
+    $FormFile = New-Object System.Windows.Forms.OpenFileDialog
+    $FormFile.CheckFileExists = $true
+    $FormFile.CheckPathExists = $true
+    $FormFile.Filter = "All Audio Files (*.*)|*.aac;*.flac;*.m4a;*.mp3;*.wav;*.wma|Free Lossless Audio Codec (*.flac)|*.flac|MPEG 4 Audio(*.m4a)|*.m4a|MPEG Audio (*.mp3)|*.mp3|Raw AAC (*.aac)|*.aac|Waveform Audio File Format (*.wav)|*.wav|Windows Media Audio (*.wma)|*.wma"
+    $FormFile.InitialDirectory = "C:\Users\$env:USERNAME\Music\"
+    $FormFile.Multiselect = $true
+    $FormFile.Title = 'Sélectionner un fichier audio à ouvrir'
+    if ($FormFile.ShowDialog() -eq [System.Windows.Forms.DialogResult]::OK)
+    {
+        $MusicPath = $FormFile.FileNames
+        Invoke-Playlist -Path $MusicPath
+    }
+    $FormFile.Dispose()
 }
 
-function Add-Folder {#Importer directory
+function Add-Folder {#Import directory
     $FormFolder = New-Object System.Windows.Forms.FolderBrowserDialog
     $FormFolder.RootFolder = 'MyComputer'
     if ($FormFolder.ShowDialog() -eq [System.Windows.Forms.DialogResult]::OK)
@@ -44,31 +44,24 @@ function Add-Folder {#Importer directory
         $MusicPath = $FormFolder.SelectedPath
         Invoke-Playlist -Path $MusicPath
     }
+    $FormFolder.Dispose()
 }
 
-function Open-Path {#Open path where read file is save
+function Open-Path {#Open file path
     param (
         $File
-        )
-    if (Test-Path $File)
-    {
-        $Argument = '/select,' + $File
-        Start-Process explorer.exe -ArgumentList $Argument
-    }
-    else
-    {
-        [System.Windows.MessageBox]::Show("Impossible d'ouvrir l'emplacement du fichier",'Erreur',[System.Windows.Forms.MessageBoxButtons]::OK,[System.Windows.Forms.MessageBoxIcon]::Error)
-    }
+    )
+    $Argument = '/select,' + $File
+    Start-Process explorer.exe -ArgumentList $Argument
 }
 
 function Clear-Playlist {#Reset player with statut message
     param (
         $Message
-        )
+    )
     $MediaPlayer.Close()
     $Timer.Stop()
     $Timer.Enabled = $false
-    $script:Statut = 0
     $script:Playlist.Clear()
     $script:Index = 0
     $script:Files = 0
@@ -79,7 +72,7 @@ function Clear-Playlist {#Reset player with statut message
     $ButtonPlay.Text = $StartPlayback.Text = 'Play'
     $ButtonPrevious.Enabled = $ButtonNext.Enabled = $PreviousPlayback.Enabled = $NextPlayback.Enabled = $Random.Enabled = $true
     $StatusLabel.Text = $Message
-    $Transfer = @()
+    $Transfer.Clear()
 }
 
 function Invoke-About {#Generate About window
@@ -98,15 +91,15 @@ function Invoke-About {#Generate About window
     $AboutTitle = New-Object System.Windows.Forms.Label
     $AboutTitle.AutoSize = $true
 	$AboutTitle.Font = New-Object Drawing.Font('SegoeUI', 10, [System.Drawing.FontStyle]::Bold)
-    $AboutTitle.Text = 'Lecteur Audio v1.3'
     $AboutTitle.Location = New-Object System.Drawing.Size(110, 18)
+    $AboutTitle.Text = 'Lecteur Audio v1.3'
     $MainAbout.Controls.Add($AboutTitle)
 
     $Developer = New-Object System.Windows.Forms.Label
     $Developer.AutoSize = $true
     $Developer.Font = New-Object Drawing.Font('SegoeUI', 9)
-    $Developer.Text = 'Développé par Jean-Baptiste CHARRON'
     $Developer.Location = New-Object System.Drawing.Size(65, 45)
+    $Developer.Text = 'Développé par Jean-Baptiste CHARRON'
     $MainAbout.Controls.Add($Developer)
 
     $AboutExit = New-Object System.Windows.Forms.Button
@@ -122,11 +115,11 @@ function Invoke-About {#Generate About window
 function Invoke-Playlist {#function to generate playlist
     param (
         $Path
-        )
+    )
     $Elements = ForEach-Object -InputObject $Path{(Get-ChildItem -Path $_ -Include *.aac,*.flac,*.m4a,*.mp3,*.wav,*.wma -Recurse -File | Measure-Object).Count}
     if ($Elements -gt 0)#Detect if path contains audio files
     {
-        $Path | ForEach-Object{(Get-ChildItem -Path $_ -Include *.aac,*.flac,*.m4a,*.mp3,*.wav,*.wma -Recurse -File).FullName} | Sort-Object | ForEach-Object{
+        $Path | ForEach-Object {(Get-ChildItem -Path $_ -Include *.aac,*.flac,*.m4a,*.mp3,*.wav,*.wma -Recurse -File).FullName} | Sort-Object | ForEach-Object {
         $script:Playlist.Add($_)
         }
         if ($script:Playlist.Count -gt 1)#Detect files number
@@ -157,7 +150,6 @@ function Invoke-Playlist {#function to generate playlist
 function Read-Music {#function to read audio file
     $MediaPlayer.Open($script:Playlist[$script:Index])
     $MediaPlayer.Play()
-    $script:Statut = 1
     $ButtonPlay.Text = $StartPlayback.Text = 'Pause'
     Get-MetaData -Path $script:Playlist[$script:Index]
     Get-Duration -Path $script:Playlist[$script:Index]
@@ -233,14 +225,12 @@ function Get-StatusPlay {#manage button play/pause
         {
             $MediaPlayer.Play()
             $Timer.Start()
-            $script:Statut = 1
             $ButtonPlay.Text = $StartPlayback.Text = 'Pause'
         }
         else
         {
             $MediaPlayer.Pause()
             $Timer.Stop()
-            $script:Statut = 0
             $ButtonPlay.Text = $StartPlayback.Text = 'Play'
         }
     }
@@ -376,10 +366,10 @@ $Random.Add_Click({
     if ($script:Playlist.Count -ge 2)
     {
         $MediaPlayer.Close()
-        $Transfer = $script:Playlist | Sort-Object{Get-Random}
+        $Transfer = $script:Playlist | Sort-Object {Get-Random}
         $script:Playlist.Clear()
-        $Transfer | ForEach-Object{$script:Playlist.Add($_)}
-        $Transfer = @()
+        $Transfer | ForEach-Object {$script:Playlist.Add($_)}
+        $Transfer.Clear()
         $script:Index = 0
         Read-Music
     }
@@ -407,7 +397,7 @@ $OutPlayer.Add_Click({
         $script:EndedPlaylist = 0
         $OutPlayer.Checked = $false
     }
-    if ($script:Statut -eq 1)
+    if ($script:Playlist.Count -gt 0)
     {
         Get-MetaData -Path $script:Playlist[$script:Index]
     }
