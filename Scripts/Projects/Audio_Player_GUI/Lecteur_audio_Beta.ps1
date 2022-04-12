@@ -13,14 +13,14 @@ Add-Type -AssemblyName System.Drawing
 [Windows.Forms.Application]::EnableVisualStyles()
 
 #Initialize variables
-[Object]$MusicPath = @()
+[array]$MusicPath = @()
 $script:Playlist = [System.Collections.ArrayList]@()
 [Int32]$script:Index = 0
 [bool]$script:Files = 0
 $Transfer = [System.Collections.ArrayList]@()
 [Int32]$script:EndedPlaylist = 0
 
-function Add-File {
+function Add-File {#Import files
     $FormFile = New-Object System.Windows.Forms.OpenFileDialog
     $FormFile.CheckFileExists = $true
     $FormFile.CheckPathExists = $true
@@ -98,7 +98,7 @@ function Invoke-About {#Generate About window
     $Developer = New-Object System.Windows.Forms.Label
     $Developer.AutoSize = $true
     $Developer.Font = New-Object Drawing.Font('SegoeUI', 9)
-    $Developer.Location = New-Object System.Drawing.Size(65, 45)
+    $Developer.Location = New-Object System.Drawing.Size(65, 55)
     $Developer.Text = 'Développé par Jean-Baptiste CHARRON'
     $MainAbout.Controls.Add($Developer)
 
