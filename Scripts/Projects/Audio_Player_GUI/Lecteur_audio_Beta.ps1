@@ -90,7 +90,7 @@ function Invoke-About {#Generate About window
 
     $AboutTitle = New-Object System.Windows.Forms.Label
     $AboutTitle.AutoSize = $true
-	$AboutTitle.Font = New-Object Drawing.Font('SegoeUI', 10, [System.Drawing.FontStyle]::Bold)
+    $AboutTitle.Font = New-Object Drawing.Font('SegoeUI', 10, [System.Drawing.FontStyle]::Bold)
     $AboutTitle.Location = New-Object System.Drawing.Size(110, 18)
     $AboutTitle.Text = 'Lecteur Audio v1.3'
     $MainAbout.Controls.Add($AboutTitle)
@@ -242,12 +242,12 @@ function Get-StatusPlay {#manage button play/pause
 
 function Open-Next {#Prepare next track
     $Timer.Stop()
-        if ($script:Index -lt ($script:Playlist.Count) - 1)
-        {
-            $script:Index += 1
-            $MediaPlayer.Close()
-            Read-Music
-        }
+    if ($script:Index -lt ($script:Playlist.Count) - 1)
+    {
+        $script:Index += 1
+        $MediaPlayer.Close()
+        Read-Music
+    }
 }
 
 function Open-Previous {#Prepare previous track
@@ -290,8 +290,10 @@ $PlayerGUI_DragDrop = [System.Windows.Forms.DragEventHandler]{
 
 $PlayerGUI.Add_DragOver($PlayerGUI_DragOver)
 $PlayerGUI.Add_DragDrop($PlayerGUI_DragDrop)
-$PlayerGUI.Add_Closing({$MediaPlayer.Close()
-Clear-Playlist})
+$PlayerGUI.Add_Closing({
+    $MediaPlayer.Close()
+    Clear-Playlist
+})
 
 $TrackTitle = New-Object System.Windows.Forms.Label
 $TrackTitle.AutoSize = $false
