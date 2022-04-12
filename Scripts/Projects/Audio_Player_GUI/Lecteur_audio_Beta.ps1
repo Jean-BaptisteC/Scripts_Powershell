@@ -379,7 +379,7 @@ $Random.Add_Click({
         $Transfer = $script:Playlist | Sort-Object{Get-Random}
         $script:Playlist.Clear()
         $Transfer | ForEach-Object{$script:Playlist.Add($_)}
-        $Transfer.Clear()
+        $Transfer = @()
         $script:Index = 0
         Read-Music
     }

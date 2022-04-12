@@ -1,6 +1,5 @@
 ﻿Add-Type -AssemblyName System.Windows.Forms
-$global:balloon = New-Object System.Windows.Forms.NotifyIcon
-$path = (Get-Process -id $pid).Path
+$balloon = New-Object System.Windows.Forms.NotifyIcon
 $balloon.Icon = [System.Drawing.Icon]::ExtractAssociatedIcon("C:\Windows\explorer.exe")
 $balloon.BalloonTipIcon = [System.Windows.Forms.ToolTipIcon]::Info
 $balloon.BalloonTipText = "Clic to open"
