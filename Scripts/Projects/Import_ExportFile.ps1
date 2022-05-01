@@ -29,22 +29,6 @@ function Open-File {
     }
 }
 
-function Save-File {
-    $FormSave = New-Object System.Windows.Forms.SaveFileDialog
-    $FormSave.CheckPathExists = $true
-    $FormSave.RestoreDirectory = $false
-    $FormSave.InitialDirectory = $Directory
-    if($FormSave.ShowDialog() -eq [System.Windows.Forms.DialogResult]::OK)
-    {
-        $script:Output = $FormSave.FileName
-        Export-File
-    }
-    else
-    {
-        exit
-    }
-}
-
 function Get-Extension {
     $Directory = [System.IO.Path]::GetDirectoryName($File)
     if([System.IO.Path]::GetExtension($File) -eq '.txt')
@@ -64,16 +48,32 @@ function Get-Extension {
         {
             $script:Output = New-Item -Path $Directory -Name $Nom -ItemType File -Force
             Export-File
-            }
-            else
-            {
-                Save-File
-            }
+        }
+        else
+        {
+            Save-File
+        }
     }
     else
     {
         $script:Output = New-Item -Path $Directory -Name $Nom -ItemType File
         Export-File
+    }
+}
+
+function Save-File {
+    $FormSave = New-Object System.Windows.Forms.SaveFileDialog
+    $FormSave.CheckPathExists = $true
+    $FormSave.RestoreDirectory = $false
+    $FormSave.InitialDirectory = $Directory
+    if($FormSave.ShowDialog() -eq [System.Windows.Forms.DialogResult]::OK)
+    {
+        $script:Output = $FormSave.FileName
+        Export-File
+    }
+    else
+    {
+        exit
     }
 }
 
@@ -99,7 +99,6 @@ function Save-Txt {#Export txt
     )
     Import-Csv -Path $File -Encoding Default | Export-Csv -Path $script:Output -Encoding UTF8 -Delimiter ',' -NoTypeInformation
     (Get-Content -Path $script:Output -Raw).replace('"','') | Set-Content -Path $script:Output
-    $Directory = [System.IO.Path]::GetDirectoryName($script:Output)
     Show-Notification
 }
 
@@ -109,7 +108,6 @@ function Save-Csv {#Export csv
     )
     Import-Csv -Path $File -Encoding Default | Export-Csv -Path $script:Output -Encoding UTF8 -Delimiter ',' -NoTypeInformation
     (Get-Content -Path $script:Output -Raw).replace('"','') | Set-Content -Path $script:Output
-    $Directory = [System.IO.Path]::GetDirectoryName($script:Output)
     Show-Notification
 }
 
