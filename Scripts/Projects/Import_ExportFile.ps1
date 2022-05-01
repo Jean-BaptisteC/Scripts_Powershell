@@ -115,7 +115,7 @@ function Show-Notification {
     $balloon.Icon = [System.Drawing.Icon]::ExtractAssociatedIcon('C:\Windows\explorer.exe')
     $balloon.BalloonTipIcon = [System.Windows.Forms.ToolTipIcon]::Info
     $balloon.BalloonTipText = 'Cliquez ici pour ouvrir'
-    $balloon.BalloonTipTitle = 'Fichier Exporté'
+    $balloon.BalloonTipTitle = 'Fichier exporté'
     $balloon.Visible = $true
     $balloon.ShowBalloonTip(5000)
 }

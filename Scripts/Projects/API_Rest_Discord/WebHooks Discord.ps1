@@ -1,4 +1,7 @@
 ﻿#Send request on Discord with content and username
+
+Set-StrictMode -Version Latest
+
 $webHookUrl = '{Your token Discord}'
 
 $username = 'Bot'

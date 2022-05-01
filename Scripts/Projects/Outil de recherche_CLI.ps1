@@ -1,7 +1,7 @@
 ﻿#Script qui recherche à l'emplacement spécifié les fichiers qui ont été modifiés il y a un jour ou moins.
 #Version 1.6
 
-Set-ExecutionPolicy -ExecutionPolicy Bypass -Scope Process
+Set-StrictMode -Version Latest
 
 $NbDay = -1
 Write-Output "Ce script affiche les derniers fichiers modifiés dans le dossier spécifié." `n

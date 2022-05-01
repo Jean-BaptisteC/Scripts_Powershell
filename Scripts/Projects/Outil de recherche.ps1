@@ -1,7 +1,7 @@
 ﻿#Script qui recherche à l'emplacement spécifié les fichiers qui ont été modifiés il y a un jour ou moins.
 #Version 2.6
 
-Set-ExecutionPolicy -ExecutionPolicy Bypass -Scope Process
+Set-StrictMode -Version Latest
 
 Add-Type -AssemblyName System.Windows.Forms
 [Windows.Forms.Application]::EnableVisualStyles()
@@ -29,7 +29,8 @@ if ($FormsDir.ShowDialog() -eq [System.Windows.Forms.DialogResult]::OK)
         {
             Start-Process $Directory
         }
-        else{
+        else
+        {
             exit
         }
 }

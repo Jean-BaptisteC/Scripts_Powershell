@@ -1,4 +1,7 @@
 ﻿#Send request on Discord with content, color, title and username
+
+Set-StrictMode -Version Latest
+
 $webHookUrl = '{Your token Discord}'
 
 [System.Collections.ArrayList]$embedArray = @()

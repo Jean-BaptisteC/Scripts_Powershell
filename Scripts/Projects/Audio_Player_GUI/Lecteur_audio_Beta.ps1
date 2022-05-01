@@ -1,7 +1,7 @@
 ﻿<#Lecteur audio compatible aac, flac, m4a, mp3, wav, wma
 Version 1.3 Beta
 
-Author: Jean-Baptiste CHARRON
+Author: Jean-Baptiste
 #>
 
 Set-StrictMode -Version Latest
