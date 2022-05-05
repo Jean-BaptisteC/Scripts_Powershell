@@ -68,8 +68,7 @@ function Clear-Playlist {#Reset player with statut message
     $script:Files = 0
     $OpenPath.IsEnabled = $false
     $TrackTitle.Content = 'Aucune piste en cours'
-    $TrackDuration.Location = New-Object System.Drawing.Size(158, 68)
-    $TrackDuration.Text = '00:00'
+    $TrackDuration.Content = '00:00'
     $ButtonPlay.Text = $StartPlayback.Header = 'Play'
     $ButtonPrevious.Enabled = $ButtonNext.Enabled = $PreviousPlayback.IsEnabled = $NextPlayback.IsEnabled = $Random.IsEnabled = $true
     $StatusLabel.Text = $Message
@@ -93,7 +92,7 @@ function Invoke-About {#Generate About window
     $AboutTitle.AutoSize = $true
     $AboutTitle.Font = New-Object Drawing.Font('SegoeUI', 10, [System.Drawing.FontStyle]::Bold)
     $AboutTitle.Location = New-Object System.Drawing.Size(110, 18)
-    $AboutTitle.Text = 'Lecteur Audio v1.3'
+    $AboutTitle.Text = 'Lecteur Audio v1.4'
     $MainAbout.Controls.Add($AboutTitle)
 
     $Developer = New-Object System.Windows.Forms.Label
@@ -208,13 +207,11 @@ function Get-Duration {#Show track duration and timer
     if ($ShellFolder.GetDetailsOf($ShellFile, 27) -ne '' -and [System.IO.Path]::GetExtension($Path) -ne '.wma')#Detect if file have duration or file have extension 'wma'
     {
         $script:Duration = $ShellFolder.GetDetailsOf($ShellFile, 27)
-        $Timer.Add_Tick({$TrackDuration.Text = "$($MediaPlayer.Position.Minutes.ToString('00')):$($MediaPlayer.Position.Seconds.ToString('00')) / " + $script:Duration.SubString($script:Duration.Length - 5)})
-        $TrackDuration.Location = New-Object System.Drawing.Size(143, 68)
+        $Timer.Add_Tick({$TrackDuration.Content = "$($MediaPlayer.Position.Minutes.ToString('00')):$($MediaPlayer.Position.Seconds.ToString('00')) / " + $script:Duration.SubString($script:Duration.Length - 5)})
     }
     else
     {
-        $Timer.Add_Tick({$TrackDuration.Text = "$($MediaPlayer.Position.Minutes.ToString('00')):$($MediaPlayer.Position.Seconds.ToString('00'))"})
-        $TrackDuration.Location = New-Object System.Drawing.Size(158, 68)
+        $Timer.Add_Tick({$TrackDuration.Content = "$($MediaPlayer.Position.Minutes.ToString('00')):$($MediaPlayer.Position.Seconds.ToString('00'))"})
     }
     $Timer.Start()
 }
@@ -290,8 +287,9 @@ function Open-Previous {#Prepare previous track
         </MenuItem>
     </Menu>
         <DockPanel>
-            <Label Name="TrackTitle" DockPanel.Dock="Top" Height="40" HorizontalAlignment ="Center" Content="Aucune piste en cours"/>
+            <Label Name="TrackTitle" DockPanel.Dock="Top" Height="40" HorizontalAlignment ="Center" VerticalContentAlignment="Center" Content="Aucune piste en cours"/>
         </DockPanel>
+        <Label Name="TrackDuration" Height="30" HorizontalAlignment ="Center" VerticalContentAlignment="Center" Content="00:00"/>
         <Button Name="ButtonPrevious" HorizontalAlignment ="Center" VerticalAlignment="Center">Précédent</Button>
         </StackPanel>
     </Window>
@@ -366,7 +364,9 @@ $OutPlayer.Add_Click({
 $OpenAbout = $Player.FindName("OpenAbout")
 $OpenAbout.Add_Click({Invoke-About})
 
-$TrackTitle= $Player.FindName("TrackTitle")
+$TrackTitle = $Player.FindName("TrackTitle")
+
+$TrackDuration = $Player.FindName("TrackDuration")
 
 $ButtonPrevious = $Player.FindName("ButtonPrevious")
 $ButtonPrevious.Add_Click({Open-Previous})
@@ -425,13 +425,13 @@ $StatusLabel.AutoSize = $true
 $StatusLabel.Text = 'Prêt'
 [void]$StatusStrip.Items.Add($StatusLabel)
 
-$TrackDuration = New-Object System.Windows.Forms.Label
+<#$TrackDuration = New-Object System.Windows.Forms.Label
 $TrackDuration.Anchor = [System.Windows.Forms.AnchorStyles]::None
 $TrackDuration.AutoSize = $true
 $TrackDuration.Font = New-Object System.Drawing.Font('SegoeUI', 9)
 $TrackDuration.Location = New-Object System.Drawing.Size(158, 68)
 $TrackDuration.Text = '00:00'
-$PlayerGUI.Controls.Add($TrackDuration)
+$PlayerGUI.Controls.Add($TrackDuration)#>
 
 $Timer = New-Object System.Windows.Forms.Timer
 $Timer.Interval = 500
