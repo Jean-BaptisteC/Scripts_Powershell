@@ -9,6 +9,7 @@ Set-StrictMode -Version Latest
 Add-Type -AssemblyName presentationCore
 Add-Type -AssemblyName System.Windows.Forms
 Add-Type -AssemblyName System.Drawing
+Add-Type -AssemblyName PresentationFramework
 
 [Windows.Forms.Application]::EnableVisualStyles()
 
@@ -65,12 +66,12 @@ function Clear-Playlist {#Reset player with statut message
     $script:Playlist.Clear()
     $script:Index = 0
     $script:Files = 0
-    $OpenPath.Enabled = $false
+    $OpenPath.IsEnabled = $false
     $TrackTitle.Text = 'Aucune piste en cours'
     $TrackDuration.Location = New-Object System.Drawing.Size(158, 68)
     $TrackDuration.Text = '00:00'
-    $ButtonPlay.Text = $StartPlayback.Text = 'Play'
-    $ButtonPrevious.Enabled = $ButtonNext.Enabled = $PreviousPlayback.Enabled = $NextPlayback.Enabled = $Random.Enabled = $true
+    $ButtonPlay.Text = $StartPlayback.Header = 'Play'
+    $ButtonPrevious.Enabled = $ButtonNext.Enabled = $PreviousPlayback.IsEnabled = $NextPlayback.IsEnabled = $Random.IsEnabled = $true
     $StatusLabel.Text = $Message
     $Transfer.Clear()
 }
@@ -124,16 +125,16 @@ function Invoke-Playlist {#function to generate playlist
         }
         if ($script:Playlist.Count -gt 1)#Detect files number
         {
-            $ButtonPrevious.Enabled = $ButtonNext.Enabled = $PreviousPlayback.Enabled = $NextPlayback.Enabled = $Random.Enabled = $true
+            $ButtonPrevious.Enabled = $ButtonNext.Enabled = $PreviousPlayback.IsEnabled = $NextPlayback.IsEnabled = $Random.IsEnabled = $true
         }
         else
         {
-            $ButtonPrevious.Enabled = $ButtonNext.Enabled = $PreviousPlayback.Enabled = $NextPlayback.Enabled = $Random.Enabled = $false
+            $ButtonPrevious.Enabled = $ButtonNext.Enabled = $PreviousPlayback.IsEnabled = $NextPlayback.IsEnabled = $Random.IsEnabled = $false
         }
         if ($script:Files -eq 0)#Detect if player have already files in playlist
         {
             $script:Files = 1
-            $OpenPath.Enabled = $true
+            $OpenPath.IsEnabled = $true
             Read-Music
         }
         else
@@ -150,7 +151,7 @@ function Invoke-Playlist {#function to generate playlist
 function Read-Music {#function to read audio file
     $MediaPlayer.Open($script:Playlist[$script:Index])
     $MediaPlayer.Play()
-    $ButtonPlay.Text = $StartPlayback.Text = 'Pause'
+    $ButtonPlay.Text = $StartPlayback.Header = 'Pause'
     Get-MetaData -Path $script:Playlist[$script:Index]
     Get-Duration -Path $script:Playlist[$script:Index]
 }
@@ -164,7 +165,8 @@ function Get-MetaData {#Show tags
     $ShellFile = $ShellFolder.ParseName($(Split-Path -Path $Path -Leaf))
     if ($ShellFolder.GetDetailsOf($ShellFile, 21))#Detect if tag 'Title' exists on played file
     {
-        $TrackTitle.Text = $ShellFolder.GetDetailsOf($ShellFile, 21) + ' - ' + $ShellFolder.GetDetailsOf($ShellFile, 14)
+        $TrackTitle.Content = $ShellFolder.GetDetailsOf($ShellFile, 21) + ' - ' + $ShellFolder.GetDetailsOf($ShellFile, 14)
+        $TrackTitle.Refresh()
     }
     else
     {
@@ -225,13 +227,13 @@ function Get-StatusPlay {#manage button play/pause
         {
             $MediaPlayer.Play()
             $Timer.Start()
-            $ButtonPlay.Text = $StartPlayback.Text = 'Pause'
+            $ButtonPlay.Text = $StartPlayback.Header = 'Pause'
         }
         else
         {
             $MediaPlayer.Pause()
             $Timer.Stop()
-            $ButtonPlay.Text = $StartPlayback.Text = 'Play'
+            $ButtonPlay.Text = $StartPlayback.Header = 'Play'
         }
     }
     else
@@ -258,6 +260,115 @@ function Open-Previous {#Prepare previous track
         Read-Music
     }
 }
+
+[xml]$XML= @"
+<Window xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:Names"
+    AllowDrop="true" ResizeMode="CanMinimize" Height="190" Title="Lecteur audio v1.4 Beta" Width="370" WindowStartupLocation="CenterScreen">
+    <Window.Resources>
+    </Window.Resources>
+    <StackPanel>
+    <Menu>
+        <MenuItem Header="_Fichier">
+            <MenuItem Name="OpenFile" Header="_Ouvrir un fichier" InputGestureText="Ctrl+O"/>
+            <MenuItem Name="OpenDir" Header="_Ouvrir un dossier" InputGestureText="Ctrl+F"/>
+            <MenuItem Name="OpenPath" Header="_Ouvrir l'emplacement" IsEnabled="False"/>
+            <MenuItem Name="QuitPlayer" Header="_Quitter" InputGestureText="Ctrl+Q"/>
+        </MenuItem>
+        <MenuItem Header="_Lecture">
+            <MenuItem Name="StartPlayback" Header="_Play" InputGestureText="Ctrl+Space"/>
+            <MenuItem Name="PreviousPlayback" Header="_Précédent" InputGestureText="Ctrl+Left"/>
+            <MenuItem Name="NextPlayback" Header="_Suivant" InputGestureText="Ctrl+Right"/>
+            <MenuItem Name="Random" Header="_Aléatoire"/>
+            <MenuItem Name="CleanPlaylist" Header="_Vider la file d'attente"/>
+            <MenuItem Name="OutPlayer" Header="_Quitter à la fin" IsCheckable="True" IsChecked="False"/>
+        </MenuItem>
+        <MenuItem Header="_Aide">
+            <MenuItem Name="OpenAbout" Header="_À propos" InputGestureText="F1"/>
+        </MenuItem>
+    </Menu>
+        <Label Name="TrackTitle" Height="40" HorizontalAlignment ="Center" Content="Aucune piste en cours"/>
+        <Button Name="ButtonPrevious" HorizontalAlignment ="Center" VerticalAlignment="Center">Précédent</Button>
+        </StackPanel>
+    </Window>
+"@
+
+$FormXML = (New-Object System.Xml.XmlNodeReader $XML)
+$Player = [Windows.Markup.XamlReader]::Load($FormXML)
+
+$OpenFile = $Player.FindName("OpenFile")
+$OpenFile.Add_Click{(Add-File)}
+
+$OpenDir = $Player.FindName("OpenDir")
+$OpenDir.Add_Click({Add-Folder})
+
+$OpenPath = $Player.FindName("OpenPath")
+$OpenPath.Add_Click({
+    if ($script:Playlist.Count -cge 1)
+    {
+        Open-Path -File $script:Playlist[$script:Index]
+    }
+})
+
+$QuitPlayer = $Player.FindName("QuitPlayer")
+$QuitPlayer.Add_Click({$Player.Close()})
+
+$StartPlayback = $Player.FindName("StartPlayback")
+$StartPlayback.Add_Click({Get-StatusPlay})
+
+$PreviousPlayback = $Player.FindName("PreviousPlayback")
+$PreviousPlayback.Add_Click({Open-Previous})
+
+$NextPlayback = $Player.FindName("NextPlayback")
+$NextPlayback.Add_Click({Open-Next})
+
+$Random = $Player.FindName("Random")
+$Random.Add_Click({
+    if ($script:Playlist.Count -ge 2)
+    {
+        $MediaPlayer.Close()
+        $Transfer = $script:Playlist | Sort-Object {Get-Random}
+        $script:Playlist.Clear()
+        $Transfer | ForEach-Object {$script:Playlist.Add($_)}
+        $Transfer.Clear()
+        $script:Index = 0
+        Read-Music
+    }
+})
+
+$CleanPlaylist = $Player.FindName("CleanPlaylist")
+$CleanPlaylist.Add_Click({
+    Clear-Playlist -Message "File d'attente vidé"
+})
+
+$OutPlayer = $Player.FindName("OutPlayer")
+$OutPlayer.Add_Click({
+    if ($OutPlayer.IsChecked -eq $false)
+    {
+        $script:EndedPlaylist = 1
+        $OutPlayer.IsChecked = $true
+    }
+    else
+    {
+        $script:EndedPlaylist = 0
+        $OutPlayer.IsChecked = $false
+    }
+    if ($script:Playlist.Count -gt 0)
+    {
+        Get-MetaData -Path $script:Playlist[$script:Index]
+    }
+})
+
+$OpenAbout = $Player.FindName("OpenAbout")
+$OpenAbout.Add_Click({Invoke-About})
+
+$TrackTitle= $Player.FindName("TrackTitle")
+
+$ButtonPrevious = $Player.FindName("ButtonPrevious")
+$ButtonPrevious.Add_Click({Open-Previous})
 
 $PlayerGUI = New-Object System.Windows.Forms.Form #Main Window
 $PlayerGUI.AllowDrop = $true
@@ -303,118 +414,6 @@ $TrackTitle.Height = 40
 $TrackTitle.Text = 'Aucune piste en cours'
 $TrackTitle.TextAlign = [System.Drawing.ContentAlignment]::MiddleCenter
 $PlayerGUI.Controls.Add($TrackTitle)
-
-$MainMenuStrip = New-Object System.Windows.Forms.MenuStrip
-$PlayerGUI.Controls.Add($MainMenuStrip)
-
-$FileMenu = New-Object System.Windows.Forms.ToolStripMenuItem
-$FileMenu.Text = '&Fichier'
-[void]$MainMenuStrip.Items.Add($FileMenu)
-
-$OpenFile = New-Object System.Windows.Forms.ToolStripMenuItem
-$OpenFile.ShortcutKeys = 'Control, O'
-$OpenFile.Text = 'Ouvrir un fichier'
-$OpenFile.Add_Click({Add-File})
-[void]$FileMenu.DropDownItems.Add($OpenFile)
-
-$OpenDir = New-Object System.Windows.Forms.ToolStripMenuItem
-$OpenDir.ShortcutKeys = 'Control, F'
-$OpenDir.Text = 'Ouvrir un dossier'
-$OpenDir.Add_Click({Add-Folder})
-[void]$FileMenu.DropDownItems.Add($OpenDir)
-
-$OpenPath = New-Object System.Windows.Forms.ToolStripMenuItem
-$OpenPath.Text = "Ouvrir l'emplacement"
-$OpenPath.Enabled = $false
-$OpenPath.Add_Click({
-    if ($script:Playlist.Count -cge 1)
-    {
-        Open-Path -File $script:Playlist[$script:Index]
-    }
-})
-[void]$FileMenu.DropDownItems.Add($OpenPath)
-
-$QuitPlayer = New-Object System.Windows.Forms.ToolStripMenuItem
-$QuitPlayer.ShortcutKeys = 'Control, Q'
-$QuitPlayer.Text = 'Quitter'
-$QuitPlayer.Add_Click({$PlayerGUI.Close()})
-[void]$FileMenu.DropDownItems.Add($QuitPlayer)
-
-$PlaybackMenu = New-Object System.Windows.Forms.ToolStripMenuItem
-$PlaybackMenu.Text = '&Lecture'
-[void]$MainMenuStrip.Items.Add($PlaybackMenu)
-
-$StartPlayback = New-Object System.Windows.Forms.ToolStripMenuItem
-$StartPlayback.ShortcutKeys = 'Control, Space'
-$StartPlayback.Text = 'Play'
-$StartPlayback.Add_Click({Get-StatusPlay})
-[void]$PlaybackMenu.DropDownItems.Add($StartPlayback)
-
-$PreviousPlayback = New-Object System.Windows.Forms.ToolStripMenuItem
-$PreviousPlayback.ShortcutKeys = 'Control, Left'
-$PreviousPlayback.Text = 'Précédent'
-$PreviousPlayback.Add_Click({Open-Previous})
-[void]$PlaybackMenu.DropDownItems.Add($PreviousPlayback)
-
-$NextPlayback = New-Object System.Windows.Forms.ToolStripMenuItem
-$NextPlayback.ShortcutKeys = 'Control, Right'
-$NextPlayback.Text = 'Suivant'
-$NextPlayback.Add_Click({Open-Next})
-[void]$PlaybackMenu.DropDownItems.Add($NextPlayback)
-
-$Random = New-Object System.Windows.Forms.ToolStripMenuItem
-$Random.Text = 'Aléatoire'
-$Random.Add_Click({
-    if ($script:Playlist.Count -ge 2)
-    {
-        $MediaPlayer.Close()
-        $Transfer = $script:Playlist | Sort-Object {Get-Random}
-        $script:Playlist.Clear()
-        $Transfer | ForEach-Object {$script:Playlist.Add($_)}
-        $Transfer.Clear()
-        $script:Index = 0
-        Read-Music
-    }
-})
-[void]$PlaybackMenu.DropDownItems.Add($Random)
-
-$CleanPlaylist = New-Object System.Windows.Forms.ToolStripMenuItem
-$CleanPlaylist.Text = "Vider la file d'attente"
-$CleanPlaylist.Add_Click({
-    Clear-Playlist -Message "File d'attente vidé"
-})
-[void]$PlaybackMenu.DropDownItems.Add($CleanPlaylist)
-
-$OutPlayer = New-Object System.Windows.Forms.ToolStripMenuItem
-$OutPlayer.Text = 'Quitter à la fin'
-$OutPlayer.Checked = $false
-$OutPlayer.Add_Click({
-    if ($OutPlayer.Checked -eq $false)
-    {
-        $script:EndedPlaylist = 1
-        $OutPlayer.Checked = $true
-    }
-    else
-    {
-        $script:EndedPlaylist = 0
-        $OutPlayer.Checked = $false
-    }
-    if ($script:Playlist.Count -gt 0)
-    {
-        Get-MetaData -Path $script:Playlist[$script:Index]
-    }
-})
-[void]$PlaybackMenu.DropDownItems.Add($OutPlayer)
-
-$HelpMenu = New-Object System.Windows.Forms.ToolStripMenuItem
-$HelpMenu.Text = '&Aide'
-[void]$MainMenuStrip.Items.Add($HelpMenu)
-
-$OpenAbout = New-Object System.Windows.Forms.ToolStripMenuItem
-$OpenAbout.ShortcutKeys = 'F1'
-$OpenAbout.Text = 'À propos'
-$OpenAbout.Add_Click({Invoke-About})
-[void]$HelpMenu.DropDownItems.Add($OpenAbout)
 
 $StatusStrip = New-Object System.Windows.Forms.StatusStrip
 $StatusStrip.SizingGrip = $false
@@ -485,5 +484,6 @@ $MediaPlayer.add_MediaFailed($handler_MediaPlayer_MediaFailed)
 
 $PlayerGUI.Add_Shown({$PlayerGUI.Activate()})
 $PlayerGUI.Add_Shown({$ButtonPlay.Select()})
-[void]$PlayerGUI.ShowDialog()
+#[void]$PlayerGUI.ShowDialog()
 $PlayerGUI.Dispose()
+[void]$Player.ShowDialog()
