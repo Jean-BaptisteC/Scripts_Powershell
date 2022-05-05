@@ -67,7 +67,7 @@ function Clear-Playlist {#Reset player with statut message
     $script:Index = 0
     $script:Files = 0
     $OpenPath.IsEnabled = $false
-    $TrackTitle.Text = 'Aucune piste en cours'
+    $TrackTitle.Content = 'Aucune piste en cours'
     $TrackDuration.Location = New-Object System.Drawing.Size(158, 68)
     $TrackDuration.Text = '00:00'
     $ButtonPlay.Text = $StartPlayback.Header = 'Play'
@@ -166,11 +166,10 @@ function Get-MetaData {#Show tags
     if ($ShellFolder.GetDetailsOf($ShellFile, 21))#Detect if tag 'Title' exists on played file
     {
         $TrackTitle.Content = $ShellFolder.GetDetailsOf($ShellFile, 21) + ' - ' + $ShellFolder.GetDetailsOf($ShellFile, 14)
-        $TrackTitle.Refresh()
     }
     else
     {
-        $TrackTitle.Text = [System.IO.Path]::GetFileNameWithoutExtension($Path)
+        $TrackTitle.Content = [System.IO.Path]::GetFileNameWithoutExtension($Path)
     }
     if ($script:Index -lt ($script:Playlist.Count)-1)#Detect if played file is the latest
     {
@@ -290,7 +289,9 @@ function Open-Previous {#Prepare previous track
             <MenuItem Name="OpenAbout" Header="_À propos" InputGestureText="F1"/>
         </MenuItem>
     </Menu>
-        <Label Name="TrackTitle" Height="40" HorizontalAlignment ="Center" Content="Aucune piste en cours"/>
+        <DockPanel>
+            <Label Name="TrackTitle" DockPanel.Dock="Top" Height="40" HorizontalAlignment ="Center" Content="Aucune piste en cours"/>
+        </DockPanel>
         <Button Name="ButtonPrevious" HorizontalAlignment ="Center" VerticalAlignment="Center">Précédent</Button>
         </StackPanel>
     </Window>
@@ -406,14 +407,14 @@ $PlayerGUI.Add_Closing({
     Clear-Playlist
 })
 
-$TrackTitle = New-Object System.Windows.Forms.Label
+<#$TrackTitle = New-Object System.Windows.Forms.Label
 $TrackTitle.AutoSize = $false
 $TrackTitle.Dock = [System.Windows.Forms.DockStyle]::Top
 $TrackTitle.Font = New-Object System.Drawing.Font('SegoeUI', 9)
 $TrackTitle.Height = 40
 $TrackTitle.Text = 'Aucune piste en cours'
 $TrackTitle.TextAlign = [System.Drawing.ContentAlignment]::MiddleCenter
-$PlayerGUI.Controls.Add($TrackTitle)
+$PlayerGUI.Controls.Add($TrackTitle)#>
 
 $StatusStrip = New-Object System.Windows.Forms.StatusStrip
 $StatusStrip.SizingGrip = $false
