@@ -8,10 +8,7 @@ Set-StrictMode -Version Latest
 
 Add-Type -AssemblyName presentationCore
 Add-Type -AssemblyName System.Windows.Forms
-Add-Type -AssemblyName System.Drawing
 Add-Type -AssemblyName PresentationFramework
-
-[Windows.Forms.Application]::EnableVisualStyles()
 
 #Initialize variables
 [array]$MusicPath = @()
@@ -69,8 +66,8 @@ function Clear-Playlist {#Reset player with statut message
     $OpenPath.IsEnabled = $false
     $TrackTitle.Content = 'Aucune piste en cours'
     $TrackDuration.Content = '00:00'
-    $ButtonPlay.Text = $StartPlayback.Header = 'Play'
-    $ButtonPrevious.Enabled = $ButtonNext.Enabled = $PreviousPlayback.IsEnabled = $NextPlayback.IsEnabled = $Random.IsEnabled = $true
+    $ButtonPlay.Content = $StartPlayback.Header = 'Play'
+    $ButtonPrevious.IsEnabled = $ButtonNext.IsEnabled = $PreviousPlayback.IsEnabled = $NextPlayback.IsEnabled = $Random.IsEnabled = $true
     $StatusLabel.Text = $Message
     $Transfer.Clear()
 }
@@ -124,11 +121,11 @@ function Invoke-Playlist {#function to generate playlist
         }
         if ($script:Playlist.Count -gt 1)#Detect files number
         {
-            $ButtonPrevious.Enabled = $ButtonNext.Enabled = $PreviousPlayback.IsEnabled = $NextPlayback.IsEnabled = $Random.IsEnabled = $true
+            $ButtonPrevious.IsEnabled = $ButtonNext.IsEnabled = $PreviousPlayback.IsEnabled = $NextPlayback.IsEnabled = $Random.IsEnabled = $true
         }
         else
         {
-            $ButtonPrevious.Enabled = $ButtonNext.Enabled = $PreviousPlayback.IsEnabled = $NextPlayback.IsEnabled = $Random.IsEnabled = $false
+            $ButtonPrevious.IsEnabled = $ButtonNext.IsEnabled = $PreviousPlayback.IsEnabled = $NextPlayback.IsEnabled = $Random.IsEnabled = $false
         }
         if ($script:Files -eq 0)#Detect if player have already files in playlist
         {
@@ -150,7 +147,7 @@ function Invoke-Playlist {#function to generate playlist
 function Read-Music {#function to read audio file
     $MediaPlayer.Open($script:Playlist[$script:Index])
     $MediaPlayer.Play()
-    $ButtonPlay.Text = $StartPlayback.Header = 'Pause'
+    $ButtonPlay.Content = $StartPlayback.Header = 'Pause'
     Get-MetaData -Path $script:Playlist[$script:Index]
     Get-Duration -Path $script:Playlist[$script:Index]
 }
@@ -219,17 +216,17 @@ function Get-Duration {#Show track duration and timer
 function Get-StatusPlay {#manage button play/pause
     if ($script:Playlist.Count -ge 1)#Detect if file is in the playlist
     {
-        if ($ButtonPlay.Text -eq 'Play')#Detect button statut
+        if ($ButtonPlay.Content -eq 'Play')#Detect button statut
         {
             $MediaPlayer.Play()
             $Timer.Start()
-            $ButtonPlay.Text = $StartPlayback.Header = 'Pause'
+            $ButtonPlay.Content = $StartPlayback.Header = 'Pause'
         }
         else
         {
             $MediaPlayer.Pause()
             $Timer.Stop()
-            $ButtonPlay.Text = $StartPlayback.Header = 'Play'
+            $ButtonPlay.Content = $StartPlayback.Header = 'Play'
         }
     }
     else
@@ -287,16 +284,48 @@ function Open-Previous {#Prepare previous track
         </MenuItem>
     </Menu>
         <DockPanel>
-            <Label Name="TrackTitle" DockPanel.Dock="Top" Height="40" HorizontalAlignment ="Center" VerticalContentAlignment="Center" Content="Aucune piste en cours"/>
+            <Label Name="TrackTitle" DockPanel.Dock="Top" Height="40" HorizontalAlignment ="Center" VerticalContentAlignment="Center" Content="Aucune piste en cours" FontFamily="Segoe UI" FontSize="13"/>
         </DockPanel>
-        <Label Name="TrackDuration" Height="30" HorizontalAlignment ="Center" VerticalContentAlignment="Center" Content="00:00"/>
-        <Button Name="ButtonPrevious" HorizontalAlignment ="Center" VerticalAlignment="Center">Précédent</Button>
+        <Label Name="TrackDuration" Height="30" HorizontalAlignment ="Center" VerticalContentAlignment="Center" Content="00:00" FontFamily="Segoe UI" FontSize="13"/>
+        <StackPanel Orientation="Horizontal">
+        <Button Name="ButtonPrevious" HorizontalAlignment ="Left" VerticalAlignment="Bottom" Width="75" Height="24">Précédent</Button>
+        <Button Name="ButtonPlay" HorizontalAlignment ="Center" VerticalAlignment="Center" Width="75" Height="24">Play</Button>
+        <Button Name="ButtonNext" HorizontalAlignment ="Center" VerticalAlignment="Center" Width="75" Height="24">Suivant</Button>
+        </StackPanel>
+                <StatusBar>
+        <StatusBarItem>
+			<TextBlock Name="StatusLabel" Text="Prêt"/>
+	    </StatusBarItem>
+        </StatusBar>
         </StackPanel>
     </Window>
 "@
 
 $FormXML = (New-Object System.Xml.XmlNodeReader $XML)
 $Player = [Windows.Markup.XamlReader]::Load($FormXML)
+<#$Player.Add_PreviewDragOver({
+	if ($_.Data.GetDataPresent([System.Windows.DataFormats]::FileDrop))
+	{
+	    $_.Effect = 'Copy'
+	}
+    else
+	{
+	    $_.Effect = 'None'
+	}
+})#>
+$Player.Add_Drop({
+        $MusicPath=@()
+	    ForEach ($FileName in $_.Data.GetData([System.Windows.DataFormats]::FileDrop))
+        {
+            $MusicPath += $FileName
+	    }
+        Invoke-Playlist -Path $MusicPath
+})
+
+$Player.Add_Closing({
+    $MediaPlayer.Close()
+    Clear-Playlist
+})
 
 $OpenFile = $Player.FindName("OpenFile")
 $OpenFile.Add_Click{(Add-File)}
@@ -345,7 +374,7 @@ $CleanPlaylist.Add_Click({
 
 $OutPlayer = $Player.FindName("OutPlayer")
 $OutPlayer.Add_Click({
-    if ($OutPlayer.IsChecked -eq $false)
+    if ($OutPlayer.IsChecked -eq 'False')
     {
         $script:EndedPlaylist = 1
         $OutPlayer.IsChecked = $true
@@ -371,6 +400,14 @@ $TrackDuration = $Player.FindName("TrackDuration")
 $ButtonPrevious = $Player.FindName("ButtonPrevious")
 $ButtonPrevious.Add_Click({Open-Previous})
 
+$ButtonPlay = $Player.FindName("ButtonPlay")
+$ButtonPlay.Add_Click({Get-StatusPlay})
+
+$ButtonNext = $Player.FindName("ButtonNext")
+$ButtonNext.Add_Click({Open-Next})
+
+$StatusLabel = $Player.FindName("StatusLabel")
+
 $PlayerGUI = New-Object System.Windows.Forms.Form #Main Window
 $PlayerGUI.AllowDrop = $true
 $PlayerGUI.FormBorderStyle = [System.Windows.Forms.FormBorderStyle]::Fixed3D
@@ -381,32 +418,6 @@ $PlayerGUI.StartPosition = [System.Windows.Forms.FormStartPosition]::CenterScree
 $PlayerGUI.Text = 'Lecteur audio v1.3 Beta'
 $PlayerGUI.Width = 370
 
-$PlayerGUI_DragOver = [System.Windows.Forms.DragEventHandler]{
-	if ($_.Data.GetDataPresent([Windows.Forms.DataFormats]::FileDrop))
-	{
-	    $_.Effect = 'Copy'
-	}
-    else
-	{
-	    $_.Effect = 'None'
-	}
-}
-$PlayerGUI_DragDrop = [System.Windows.Forms.DragEventHandler]{
-        $MusicPath=@()
-	    ForEach ($FileName in $_.Data.GetData([Windows.Forms.DataFormats]::FileDrop))
-        {
-            $MusicPath += $FileName
-	    }
-        Invoke-Playlist -Path $MusicPath
-}
-
-$PlayerGUI.Add_DragOver($PlayerGUI_DragOver)
-$PlayerGUI.Add_DragDrop($PlayerGUI_DragDrop)
-$PlayerGUI.Add_Closing({
-    $MediaPlayer.Close()
-    Clear-Playlist
-})
-
 <#$TrackTitle = New-Object System.Windows.Forms.Label
 $TrackTitle.AutoSize = $false
 $TrackTitle.Dock = [System.Windows.Forms.DockStyle]::Top
@@ -415,15 +426,6 @@ $TrackTitle.Height = 40
 $TrackTitle.Text = 'Aucune piste en cours'
 $TrackTitle.TextAlign = [System.Drawing.ContentAlignment]::MiddleCenter
 $PlayerGUI.Controls.Add($TrackTitle)#>
-
-$StatusStrip = New-Object System.Windows.Forms.StatusStrip
-$StatusStrip.SizingGrip = $false
-$PlayerGUI.Controls.Add($StatusStrip)
-
-$StatusLabel = New-Object System.Windows.Forms.ToolStripStatusLabel
-$StatusLabel.AutoSize = $true
-$StatusLabel.Text = 'Prêt'
-[void]$StatusStrip.Items.Add($StatusLabel)
 
 <#$TrackDuration = New-Object System.Windows.Forms.Label
 $TrackDuration.Anchor = [System.Windows.Forms.AnchorStyles]::None
@@ -436,30 +438,6 @@ $PlayerGUI.Controls.Add($TrackDuration)#>
 $Timer = New-Object System.Windows.Forms.Timer
 $Timer.Interval = 500
 
-$ButtonPrevious = New-Object System.Windows.Forms.Button
-$ButtonPrevious.Anchor = [System.Windows.Forms.AnchorStyles]::Bottom
-$ButtonPrevious.AutoSize = $true
-$ButtonPrevious.Location = New-Object System.Drawing.Size(58, 97)
-$ButtonPrevious.Text = 'Précédent'
-$ButtonPrevious.Add_Click({Open-Previous})
-$PlayerGUI.Controls.Add($ButtonPrevious)
-
-$ButtonPlay = New-Object System.Windows.Forms.Button
-$ButtonPlay.Anchor = [System.Windows.Forms.AnchorStyles]::Bottom
-$ButtonPlay.AutoSize = $true
-$ButtonPlay.Location = New-Object System.Drawing.Size(138, 97)
-$ButtonPlay.Text = 'Play'
-$ButtonPlay.Add_Click({Get-StatusPlay})
-$PlayerGUI.Controls.Add($ButtonPlay)
-
-$ButtonNext = New-Object System.Windows.Forms.Button
-$ButtonNext.Anchor = [System.Windows.Forms.AnchorStyles]::Bottom
-$ButtonNext.AutoSize = $true
-$ButtonNext.Location = New-Object System.Drawing.Size(218, 97)
-$ButtonNext.Text = 'Suivant'
-$ButtonNext.Add_Click({Open-Next})
-$PlayerGUI.Controls.Add($ButtonNext)
-
 $MediaPlayer = New-Object System.Windows.Media.MediaPlayer
 $MediaPlayer.Volume = 1
 $handler_MediaPlayer_MediaEnded=#Detect ended file and read next file
@@ -467,7 +445,7 @@ $handler_MediaPlayer_MediaEnded=#Detect ended file and read next file
     $Timer.Stop()
     if ($script:EndedPlaylist -eq 1 -and $script:Index -eq ($script:Playlist.Count) - 1)
     {
-        $PlayerGUI.Close()
+        $Player.Close()
     }
     if ($script:Index -le ($script:Playlist.Count))
     {
@@ -483,8 +461,5 @@ $handler_MediaPlayer_MediaFailed=#Detect if file cannot be read
 }
 $MediaPlayer.add_MediaFailed($handler_MediaPlayer_MediaFailed)
 
-$PlayerGUI.Add_Shown({$PlayerGUI.Activate()})
-$PlayerGUI.Add_Shown({$ButtonPlay.Select()})
-#[void]$PlayerGUI.ShowDialog()
-$PlayerGUI.Dispose()
+$Player.ShowActivated = $true
 [void]$Player.ShowDialog()
