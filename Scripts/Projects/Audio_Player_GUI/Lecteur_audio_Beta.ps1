@@ -96,7 +96,7 @@ function Invoke-About {#Generate About window
     $Developer.AutoSize = $true
     $Developer.Font = New-Object Drawing.Font('SegoeUI', 9)
     $Developer.Location = New-Object System.Drawing.Size(65, 55)
-    $Developer.Text = 'Développé par Jean-Baptiste CHARRON'
+    $Developer.Text = 'Développé par Jean-Baptiste'
     $MainAbout.Controls.Add($Developer)
 
     $AboutExit = New-Object System.Windows.Forms.Button
@@ -288,14 +288,14 @@ function Open-Previous {#Prepare previous track
         </DockPanel>
         <Label Name="TrackDuration" Height="30" HorizontalAlignment ="Center" VerticalContentAlignment="Center" Content="00:00" FontFamily="Segoe UI" FontSize="13"/>
         <StackPanel Orientation="Horizontal">
-        <Button Name="ButtonPrevious" HorizontalAlignment ="Left" VerticalAlignment="Bottom" Width="75" Height="24">Précédent</Button>
-        <Button Name="ButtonPlay" HorizontalAlignment ="Center" VerticalAlignment="Center" Width="75" Height="24">Play</Button>
-        <Button Name="ButtonNext" HorizontalAlignment ="Center" VerticalAlignment="Center" Width="75" Height="24">Suivant</Button>
+            <Button Name="ButtonPrevious" HorizontalAlignment ="Left" VerticalAlignment="Bottom" Width="75" Height="24">Précédent</Button>
+            <Button Name="ButtonPlay" HorizontalAlignment ="Center" VerticalAlignment="Center" Width="75" Height="24">Play</Button>
+            <Button Name="ButtonNext" HorizontalAlignment ="Center" VerticalAlignment="Center" Width="75" Height="24">Suivant</Button>
         </StackPanel>
-                <StatusBar>
-        <StatusBarItem>
-			<TextBlock Name="StatusLabel" Text="Prêt"/>
-	    </StatusBarItem>
+        <StatusBar>
+            <StatusBarItem>
+			    <TextBlock Name="StatusLabel" Text="Prêt"/>
+	        </StatusBarItem>
         </StatusBar>
         </StackPanel>
     </Window>
@@ -303,16 +303,7 @@ function Open-Previous {#Prepare previous track
 
 $FormXML = (New-Object System.Xml.XmlNodeReader $XML)
 $Player = [Windows.Markup.XamlReader]::Load($FormXML)
-<#$Player.Add_PreviewDragOver({
-	if ($_.Data.GetDataPresent([System.Windows.DataFormats]::FileDrop))
-	{
-	    $_.Effect = 'Copy'
-	}
-    else
-	{
-	    $_.Effect = 'None'
-	}
-})#>
+$Player.ShowActivated = $true
 $Player.Add_Drop({
         $MusicPath=@()
 	    ForEach ($FileName in $_.Data.GetData([System.Windows.DataFormats]::FileDrop))
@@ -421,18 +412,14 @@ $PlayerGUI.Width = 370
 <#$TrackTitle = New-Object System.Windows.Forms.Label
 $TrackTitle.AutoSize = $false
 $TrackTitle.Dock = [System.Windows.Forms.DockStyle]::Top
-$TrackTitle.Font = New-Object System.Drawing.Font('SegoeUI', 9)
 $TrackTitle.Height = 40
-$TrackTitle.Text = 'Aucune piste en cours'
 $TrackTitle.TextAlign = [System.Drawing.ContentAlignment]::MiddleCenter
 $PlayerGUI.Controls.Add($TrackTitle)#>
 
 <#$TrackDuration = New-Object System.Windows.Forms.Label
 $TrackDuration.Anchor = [System.Windows.Forms.AnchorStyles]::None
 $TrackDuration.AutoSize = $true
-$TrackDuration.Font = New-Object System.Drawing.Font('SegoeUI', 9)
 $TrackDuration.Location = New-Object System.Drawing.Size(158, 68)
-$TrackDuration.Text = '00:00'
 $PlayerGUI.Controls.Add($TrackDuration)#>
 
 $Timer = New-Object System.Windows.Forms.Timer
@@ -461,5 +448,4 @@ $handler_MediaPlayer_MediaFailed=#Detect if file cannot be read
 }
 $MediaPlayer.add_MediaFailed($handler_MediaPlayer_MediaFailed)
 
-$Player.ShowActivated = $true
 [void]$Player.ShowDialog()
