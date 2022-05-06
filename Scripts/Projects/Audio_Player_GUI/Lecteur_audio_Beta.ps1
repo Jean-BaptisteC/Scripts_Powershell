@@ -261,8 +261,6 @@ function Open-Previous {#Prepare previous track
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:Names"
     AllowDrop="true" ResizeMode="CanMinimize" Height="190" Title="Lecteur audio v1.4 Beta" Width="370" WindowStartupLocation="CenterScreen">
-    <Window.Resources>
-    </Window.Resources>
     <StackPanel>
     <Menu>
         <MenuItem Header="_Fichier">
@@ -400,14 +398,9 @@ $ButtonNext.Add_Click({Open-Next})
 $StatusLabel = $Player.FindName("StatusLabel")
 
 $PlayerGUI = New-Object System.Windows.Forms.Form #Main Window
-$PlayerGUI.AllowDrop = $true
 $PlayerGUI.FormBorderStyle = [System.Windows.Forms.FormBorderStyle]::Fixed3D
-$PlayerGUI.Height = 190
 $PlayerGUI.MaximizeBox = $false
 $PlayerGUI.ShowIcon = $false
-$PlayerGUI.StartPosition = [System.Windows.Forms.FormStartPosition]::CenterScreen
-$PlayerGUI.Text = 'Lecteur audio v1.3 Beta'
-$PlayerGUI.Width = 370
 
 <#$TrackTitle = New-Object System.Windows.Forms.Label
 $TrackTitle.AutoSize = $false
@@ -415,12 +408,6 @@ $TrackTitle.Dock = [System.Windows.Forms.DockStyle]::Top
 $TrackTitle.Height = 40
 $TrackTitle.TextAlign = [System.Drawing.ContentAlignment]::MiddleCenter
 $PlayerGUI.Controls.Add($TrackTitle)#>
-
-<#$TrackDuration = New-Object System.Windows.Forms.Label
-$TrackDuration.Anchor = [System.Windows.Forms.AnchorStyles]::None
-$TrackDuration.AutoSize = $true
-$TrackDuration.Location = New-Object System.Drawing.Size(158, 68)
-$PlayerGUI.Controls.Add($TrackDuration)#>
 
 $Timer = New-Object System.Windows.Forms.Timer
 $Timer.Interval = 500
