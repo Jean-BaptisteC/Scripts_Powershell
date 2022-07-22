@@ -1,5 +1,5 @@
 ﻿<#Lecteur audio compatible aac, flac, m4a, mp3, wav, wma
-Version 1.3 Beta
+Version 1.4 Beta
 
 Author: Jean-Baptiste
 #>
@@ -8,6 +8,9 @@ Set-StrictMode -Version Latest
 
 Add-Type -AssemblyName presentationCore
 Add-Type -AssemblyName System.Windows.Forms
+Add-Type -AssemblyName System.Drawing
+
+[Windows.Forms.Application]::EnableVisualStyles()
 
 #Initialize variables
 [array]$MusicPath = @()
@@ -94,7 +97,7 @@ function Invoke-About {#Generate About window
     $Developer = New-Object System.Windows.Forms.Label
     $Developer.AutoSize = $true
     $Developer.Font = New-Object Drawing.Font('SegoeUI', 9)
-    $Developer.Location = New-Object System.Drawing.Size(65, 55)
+    $Developer.Location = New-Object System.Drawing.Size(85, 55)
     $Developer.Text = 'Développé par Jean-Baptiste'
     $MainAbout.Controls.Add($Developer)
 
@@ -204,10 +207,12 @@ function Get-Duration {#Show track duration and timer
     {
         $script:Duration = $ShellFolder.GetDetailsOf($ShellFile, 27)
         $Timer.Add_Tick({$TrackDuration.Text = "$($MediaPlayer.Position.Minutes.ToString('00')):$($MediaPlayer.Position.Seconds.ToString('00')) / " + $script:Duration.SubString($script:Duration.Length - 5)})
+        $TrackDuration.Location = New-Object System.Drawing.Size(143, 68)
     }
     else
     {
         $Timer.Add_Tick({$TrackDuration.Text = "$($MediaPlayer.Position.Minutes.ToString('00')):$($MediaPlayer.Position.Seconds.ToString('00'))"})
+        $TrackDuration.Location = New-Object System.Drawing.Size(158, 68)
     }
     $Timer.Start()
 }
@@ -260,7 +265,7 @@ $Player.Height = 190
 $Player.MaximizeBox = $false
 $Player.ShowIcon = $false
 $Player.StartPosition = [System.Windows.Forms.FormStartPosition]::CenterScreen
-$Player.Text = 'Lecteur audio v1.3 Beta'
+$Player.Text = 'Lecteur audio v1.4 Beta'
 $Player.Width = 370
 
 $Player_DragDrop = [System.Windows.Forms.DragEventHandler]{
@@ -467,4 +472,8 @@ $handler_MediaPlayer_MediaFailed=#Detect if file cannot be read
 }
 $MediaPlayer.add_MediaFailed($handler_MediaPlayer_MediaFailed)
 
+$Player.Add_Shown({$Player.Activate()})
+$Player.Add_Shown({$ButtonPlay.Select()})
+
 [void]$Player.ShowDialog()
+$Player.Dispose()
